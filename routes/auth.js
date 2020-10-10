@@ -3,7 +3,7 @@ const { Router } = require('express');
 const { check }  = require('express-validator');
 
 
-const { create, login, renewtoken }   = require('../controllers/auth');
+const { create, login, renewtoken } = require('../controllers/auth');
 const { validateToken } = require('../middlewares/token-validator');
 const { validateUser } = require('../middlewares/user-validator');
 

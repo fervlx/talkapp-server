@@ -1,51 +1,29 @@
 const { io } = require('../index');
 
-const Bands = require('../models/bands');
-const Band  = require('../models/band');
+const { verifyToken } = require('../helpers/jwt');
+const { updateConnectionState } = require('../controllers/user');
 
-const bands = new Bands();
-bands.add( new Band( 'Linkin Park' ));
-bands.add( new Band( 'Metallica' ));
-bands.add( new Band( 'LPDA' ));
-bands.add( new Band( 'LVP' ));
-bands.add( new Band( 'Attaque 77' ));
-bands.add( new Band( 'La Renga' ));
-
-//console.log( bands );
 
 //test
 io.on('connect', client => {
     
-    client.emit('active-bands', bands.getAll() );
+    console.log('connected client');
+    //console.log( client.handshake.headers );
+    
+    const token = client.handshake.headers['x-token'];
+    const [ valid, uid ] = verifyToken( token );
+    
+    if ( !valid ) {
+        client.disconnect();
+        return;
+    }
 
-    client.on('vote-band', ( payload ) => {
-        
-        //payload = { id: bandid }
-        bands.vote( payload.id );
-        //emit for everybody
-        io.emit('active-bands', bands.getAll() );
-    });
-
-    client.on('add-band', ( payload ) => {
-
-        // payload = { name: ... }
-        bands.add( new Band( payload.name ));
-
-        //notify all
-        io.emit('active-bands', bands.getAll() );
-    });
-
-    client.on('delete-band', ( payload ) => {
-
-        // payload = { id: ... }
-        bands.delete( payload.id );
-
-        //notify all
-        io.emit('active-bands', bands.getAll() );
-    });
+    updateConnectionState( uid, true );
+    //console.log( "valid client", valid, uid );
 
     client.on('disconnect', () => { 
-        console.log( "cliente desconectado", client.id );
+        //console.log( "cliente desconectado", client.id );
+        updateConnectionState( uid, false );
     });
 
     // client.on('message', ( payload ) => {
